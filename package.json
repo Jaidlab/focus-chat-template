@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:jaidlab/focus-chat-template.git"
+    "url": "git+https://github.com/jaidlab/focus-chat-template.git"
   },
   "scripts": {
     "test": "bun test --max-concurrency 1"
