@@ -61,7 +61,7 @@
              {%- endif %}
          {%- endfor %}
      {%- elif content is none or content is undefined %}
-@@ -59,7 +63,8 @@
+@@ -71,7 +75,8 @@
          {%- set leading.active = false %}
      {%- endif %}
  {%- endfor %}
@@ -69,9 +69,9 @@
 +{%- set _has_tools = tools is defined and tools and tools is iterable and tools is not mapping %}
 +{%- if _has_tools %}
      {{- '<|im_start|>system\n' }}
-     {{- "# Tools\n\nYou have access to the following functions:\n\n<tools>" }}
-     {%- for tool in tools %}
-@@ -116,7 +121,7 @@
+     {%- if reasoning_instructions %}
+         {{- reasoning_instructions + '\n\n' }}
+@@ -135,7 +140,7 @@
          {%- else %}
              {{- '<|im_start|>assistant\n' + content }}
          {%- endif %}
@@ -80,7 +80,7 @@
              {%- for tool_call in message.tool_calls %}
                  {%- set call = tool_call.function if tool_call.function is defined and tool_call.function is not none else tool_call %}
                  {%- if loop.first %}
-@@ -155,7 +160,7 @@
+@@ -174,7 +179,7 @@
              {{- '<|im_end|>\n' }}
          {%- endif %}
      {%- else %}

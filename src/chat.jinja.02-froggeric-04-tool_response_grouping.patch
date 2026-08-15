@@ -1,6 +1,6 @@
 --- a/chat.jinja
 +++ b/chat.jinja
-@@ -144,16 +144,14 @@
+@@ -163,16 +163,14 @@
              {%- endfor %}
          {%- endif %}
          {{- '<|im_end|>\n' }}

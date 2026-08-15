@@ -1,6 +1,6 @@
 --- a/chat.jinja
 +++ b/chat.jinja
-@@ -90,7 +90,7 @@
+@@ -109,7 +109,7 @@
      {%- set content = render_content(message.content, true) | trim %}
      {%- if loop.index0 < leading.count %}
      {%- elif message.role == 'system' or message.role == 'developer' %}

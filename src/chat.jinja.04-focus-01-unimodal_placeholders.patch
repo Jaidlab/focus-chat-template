@@ -37,7 +37,7 @@
                  {%- elif 'text' in item %}
                      {{- item.text }}
                  {%- else %}
-@@ -50,7 +30,7 @@
+@@ -62,7 +42,7 @@
  {%- set leading = namespace(active=true, count=0, content='') %}
  {%- for message in messages %}
      {%- if leading.active and (message.role == 'system' or message.role == 'developer') %}
@@ -46,7 +46,7 @@
          {%- if rendered %}
              {%- if leading.content %}
                  {%- set leading.content = leading.content + '\n' + rendered %}
-@@ -84,7 +64,7 @@
+@@ -103,7 +83,7 @@
  {%- for message in messages[::-1] %}
      {%- set index = (messages|length - 1) - loop.index0 %}
      {%- if ns.multi_step_tool and message.role == "user" %}
@@ -55,7 +55,7 @@
          {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}
              {%- set ns.multi_step_tool = false %}
              {%- set ns.last_query_index = index %}
-@@ -92,7 +72,7 @@
+@@ -111,7 +91,7 @@
      {%- endif %}
  {%- endfor %}
  {%- for message in messages %}

@@ -1,8 +1,8 @@
 --- a/chat.jinja
 +++ b/chat.jinja
-@@ -42,6 +42,22 @@
- {%- if not messages %}
-     {{- raise_exception('No messages provided.') }}
+@@ -54,6 +54,22 @@
+         {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}
+     {%- endif %}
  {%- endif %}
 +{%- set leading = namespace(active=true, count=0, content='') %}
 +{%- for message in messages %}
@@ -22,8 +22,8 @@
 +{%- endfor %}
  {%- if tools and tools is iterable and tools is not mapping %}
      {{- '<|im_start|>system\n' }}
-     {{- "# Tools\n\nYou have access to the following functions:\n\n<tools>" }}
-@@ -51,18 +67,12 @@
+     {%- if reasoning_instructions %}
+@@ -66,21 +82,13 @@
      {%- endfor %}
      {{- "\n</tools>" }}
      {{- '\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>' }}
@@ -36,17 +36,20 @@
 +        {{- '\n\n' + leading.content }}
      {%- endif %}
      {{- '<|im_end|>\n' }}
--{%- else %}
+ {%- else %}
 -    {%- if messages[0].role == 'system' %}
 -        {%- set content = render_content(messages[0].content, false, true)|trim %}
--        {{- '<|im_start|>system\n' + content + '<|im_end|>\n' }}
--    {%- endif %}
-+{%- elif leading.content %}
-+    {{- '<|im_start|>system\n' + leading.content + '<|im_end|>\n' }}
- {%- endif %}
- {%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}
- {%- for message in messages[::-1] %}
-@@ -79,12 +89,11 @@
+-        {%- if content %}
+-            {{- '<|im_start|>system\n' + (reasoning_instructions + '\n\n' if reasoning_instructions else '')  + content + '<|im_end|>\n' }}
+-        {%- elif reasoning_instructions %}
+-            {{- '<|im_start|>system\n' + reasoning_instructions + '<|im_end|>\n' }}
+-        {%- endif %}
++    {%- if leading.content %}
++        {{- '<|im_start|>system\n' + (reasoning_instructions + '\n\n' if reasoning_instructions else '') + leading.content + '<|im_end|>\n' }}
+     {%- elif reasoning_instructions %}
+         {{- '<|im_start|>system\n' + reasoning_instructions + '<|im_end|>\n' }}
+     {%- endif %}
+@@ -100,12 +108,11 @@
      {{- raise_exception('No user query found in messages.') }}
  {%- endif %}
  {%- for message in messages %}

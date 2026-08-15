@@ -1,6 +1,6 @@
 --- a/chat.jinja
 +++ b/chat.jinja
-@@ -148,7 +148,9 @@
+@@ -167,7 +167,9 @@
                  {{- '</function>\n</tool_call>' }}
              {%- endfor %}
          {%- endif %}

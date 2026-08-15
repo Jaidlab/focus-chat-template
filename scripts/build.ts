@@ -1,4 +1,4 @@
-import {mkdir, readdir, readFile, writeFile} from 'node:fs/promises'
+import {access, mkdir, readdir, readFile, writeFile} from 'node:fs/promises'
 import {join, resolve} from 'node:path'
 
 function applyPatch(source: string, patch: string, patchName: string) {
@@ -77,17 +77,32 @@ function applyPatch(source: string, patch: string, patchName: string) {
 
 const root = resolve(import.meta.dir, '..')
 const sourceDir = join(root, 'src')
+const tempDir = join(root, 'temp')
+const baseFile = join(tempDir, 'chat_template.jinja')
 const outputDir = join(root, 'dist')
 const outputFile = join(outputDir, 'chat_template.jinja')
+const baseUrl = 'https://huggingface.co/Qwen/Qwen3.8-27B/resolve/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/chat_template.jinja'
 const patchNames = (await readdir(sourceDir))
   .filter(name => name.startsWith('chat.jinja.') && name.endsWith('.patch'))
   .sort()
 
-let template = await readFile(join(sourceDir, 'chat.jinja'), 'utf8')
+try {
+  await access(baseFile)
+} catch {
+  const response = await fetch(baseUrl)
+  if (!response.ok) {
+    throw new Error(`Failed to download Qwen 3.8 chat template: HTTP ${response.status} ${response.statusText}`)
+  }
+  await mkdir(tempDir, {recursive: true})
+  await writeFile(baseFile, await response.text())
+  console.log('Downloaded Qwen 3.8 chat template to temp/chat_template.jinja.')
+}
+
+let template = await readFile(baseFile, 'utf8')
 for (const patchName of patchNames) {
   template = applyPatch(template, await readFile(join(sourceDir, patchName), 'utf8'), patchName)
 }
 
 await mkdir(outputDir, {recursive: true})
 await writeFile(outputFile, template)
-console.log(`Built dist/chat_template.jinja from src/chat.jinja with ${patchNames.length} patches.`)
+console.log(`Built dist/chat_template.jinja from temp/chat_template.jinja with ${patchNames.length} patches.`)

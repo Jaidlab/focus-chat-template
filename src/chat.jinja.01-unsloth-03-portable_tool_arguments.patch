@@ -1,10 +1,10 @@
 --- a/chat.jinja
 +++ b/chat.jinja
-@@ -122,10 +122,11 @@
+@@ -136,10 +136,11 @@
                  {%- else %}
                      {{- '\n<tool_call>\n<function=' + tool_call.name + '>\n' }}
                  {%- endif %}
--                {%- if tool_call.arguments is defined %}
+-                {%- if tool_call.arguments is defined and tool_call.arguments != '' %}
 -                    {%- for args_name, args_value in tool_call.arguments|items %}
 +                {%- if tool_call.arguments is defined and tool_call.arguments is mapping %}
 +                    {%- for args_name in tool_call.arguments %}
