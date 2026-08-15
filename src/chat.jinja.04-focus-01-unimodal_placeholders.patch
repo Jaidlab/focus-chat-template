@@ -1,0 +1,66 @@
+--- a/chat.jinja
++++ b/chat.jinja
+@@ -1,33 +1,13 @@
+-{%- set image_count = namespace(value=0) %}
+-{%- set video_count = namespace(value=0) %}
+-{%- macro render_content(content, do_vision_count, is_system_content=false) %}
++{%- macro render_content(content) %}
+     {%- if content is string %}
+         {{- content }}
+     {%- elif content is iterable and content is not mapping %}
+         {%- for item in content %}
+             {%- if item is mapping %}
+                 {%- if ('type' in item and (item.type == 'image' or item.type == 'image_url')) or 'image' in item or 'image_url' in item %}
+-                    {%- if is_system_content %}
+-                        {{- raise_exception('System message cannot contain images.') }}
+-                    {%- endif %}
+-                    {%- if do_vision_count %}
+-                        {%- set image_count.value = image_count.value + 1 %}
+-                    {%- endif %}
+-                    {%- if add_vision_id %}
+-                        {{- 'Picture ' ~ image_count.value ~ ': ' }}
+-                    {%- endif %}
+-                    {{- '<|vision_start|><|image_pad|><|vision_end|>' }}
++                    {{- '[image]' }}
+                 {%- elif ('type' in item and item.type == 'video') or 'video' in item %}
+-                    {%- if is_system_content %}
+-                        {{- raise_exception('System message cannot contain videos.') }}
+-                    {%- endif %}
+-                    {%- if do_vision_count %}
+-                        {%- set video_count.value = video_count.value + 1 %}
+-                    {%- endif %}
+-                    {%- if add_vision_id %}
+-                        {{- 'Video ' ~ video_count.value ~ ': ' }}
+-                    {%- endif %}
+-                    {{- '<|vision_start|><|video_pad|><|vision_end|>' }}
++                    {{- '[video]' }}
+                 {%- elif 'text' in item %}
+                     {{- item.text }}
+                 {%- else %}
+@@ -50,7 +30,7 @@
+ {%- set leading = namespace(active=true, count=0, content='') %}
+ {%- for message in messages %}
+     {%- if leading.active and (message.role == 'system' or message.role == 'developer') %}
+-        {%- set rendered = render_content(message.content, false, true) | trim %}
++        {%- set rendered = render_content(message.content) | trim %}
+         {%- if rendered %}
+             {%- if leading.content %}
+                 {%- set leading.content = leading.content + '\n' + rendered %}
+@@ -84,7 +64,7 @@
+ {%- for message in messages[::-1] %}
+     {%- set index = (messages|length - 1) - loop.index0 %}
+     {%- if ns.multi_step_tool and message.role == "user" %}
+-        {%- set content = render_content(message.content, false)|trim %}
++        {%- set content = render_content(message.content)|trim %}
+         {%- if not(content.startswith('<tool_response>') and content.endswith('</tool_response>')) %}
+             {%- set ns.multi_step_tool = false %}
+             {%- set ns.last_query_index = index %}
+@@ -92,7 +72,7 @@
+     {%- endif %}
+ {%- endfor %}
+ {%- for message in messages %}
+-    {%- set content = render_content(message.content, true) | trim %}
++    {%- set content = render_content(message.content) | trim %}
+     {%- if loop.index0 < leading.count %}
+     {%- elif message.role == 'system' or message.role == 'developer' %}
+         {{- '<|im_start|>system\n' + content + '<|im_end|>\n' }}

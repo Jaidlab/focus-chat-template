@@ -1,0 +1,48 @@
+--- a/chat.jinja
++++ b/chat.jinja
+@@ -42,6 +42,7 @@
+ {%- if not messages %}
+     {{- raise_exception('No messages provided.') }}
+ {%- endif %}
++{%- set _preserve_thinking = preserve_thinking if preserve_thinking is defined else true %}
+ {%- set leading = namespace(active=true, count=0, content='') %}
+ {%- for message in messages %}
+     {%- if leading.active and (message.role == 'system' or message.role == 'developer') %}
+@@ -94,19 +95,26 @@
+         {{- '<|im_start|>' + message.role + '\n' + content + '<|im_end|>' + '\n' }}
+     {%- elif message.role == "assistant" %}
+         {%- set reasoning_content = '' %}
+-        {%- if message.reasoning_content is string %}
++        {%- if message.reasoning_content is defined and message.reasoning_content is string %}
+             {%- set reasoning_content = message.reasoning_content %}
++        {%- elif message.thinking is defined and message.thinking is string %}
++            {%- set reasoning_content = message.thinking %}
++        {%- elif content.startswith('</think>') %}
++            {%- set content = (content.split('</think>')[1:] | join('</think>')).lstrip('\n') %}
++        {%- elif '\n</think>' in content %}
++            {%- set reasoning_content = content.split('\n</think>')[0] %}
++            {%- if reasoning_content.startswith('<think>\n') %}
++                {%- set reasoning_content = reasoning_content[8:] %}
++            {%- elif reasoning_content.startswith('<think>') %}
++                {%- set reasoning_content = reasoning_content[7:].lstrip('\n') %}
++            {%- endif %}
++            {%- set content = (content.split('\n</think>')[1:] | join('\n</think>')).lstrip('\n') %}
++        {%- endif %}
++        {%- set reasoning_content = reasoning_content | trim %}
++        {%- if reasoning_content and (_preserve_thinking or loop.index0 > ns.last_query_index) %}
++            {{- '<|im_start|>assistant\n<think>\n' + reasoning_content + '\n</think>\n\n' + content }}
+         {%- else %}
+-            {%- if '</think>' in content %}
+-                {%- set reasoning_content = content.split('</think>')[0].rstrip('\n').split('<think>')[-1].lstrip('\n') %}
+-                {%- set content = content.split('</think>')[-1].lstrip('\n') %}
+-            {%- endif %}
+-        {%- endif %}
+-        {%- set reasoning_content = reasoning_content|trim %}
+-        {%- if (preserve_thinking is defined and preserve_thinking is true) or (loop.index0 > ns.last_query_index) %}
+-            {{- '<|im_start|>' + message.role + '\n<think>\n' + reasoning_content + '\n</think>\n\n' + content }}
+-        {%- else %}
+-            {{- '<|im_start|>' + message.role + '\n' + content }}
++            {{- '<|im_start|>assistant\n' + content }}
+         {%- endif %}
+         {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}
+             {%- for tool_call in message.tool_calls %}

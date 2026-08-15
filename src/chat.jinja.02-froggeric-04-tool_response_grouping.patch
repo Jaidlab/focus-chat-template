@@ -1,0 +1,25 @@
+--- a/chat.jinja
++++ b/chat.jinja
+@@ -144,16 +144,14 @@
+             {%- endfor %}
+         {%- endif %}
+         {{- '<|im_end|>\n' }}
+-    {%- elif message.role == "tool" %}
+-        {%- if loop.previtem and loop.previtem.role != "tool" %}
++    {%- elif message.role == 'tool' %}
++        {%- set previous_role = messages[loop.index0 - 1].role if loop.index0 > 0 else '' %}
++        {%- if previous_role != 'tool' %}
+             {{- '<|im_start|>user' }}
+         {%- endif %}
+-        {{- '\n<tool_response>\n' }}
+-        {{- content }}
+-        {{- '\n</tool_response>' }}
+-        {%- if not loop.last and loop.nextitem.role != "tool" %}
+-            {{- '<|im_end|>\n' }}
+-        {%- elif loop.last %}
++        {{- '\n<tool_response>\n' + content + '\n</tool_response>' }}
++        {%- set next_role = messages[loop.index0 + 1].role if not loop.last else '' %}
++        {%- if loop.last or next_role != 'tool' %}
+             {{- '<|im_end|>\n' }}
+         {%- endif %}
+     {%- else %}

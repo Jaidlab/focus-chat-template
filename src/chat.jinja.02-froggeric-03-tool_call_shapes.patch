@@ -1,0 +1,40 @@
+--- a/chat.jinja
++++ b/chat.jinja
+@@ -118,26 +118,27 @@
+         {%- endif %}
+         {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping %}
+             {%- for tool_call in message.tool_calls %}
+-                {%- if tool_call.function is defined %}
+-                    {%- set tool_call = tool_call.function %}
+-                {%- endif %}
++                {%- set call = tool_call.function if tool_call.function is defined and tool_call.function is not none else tool_call %}
+                 {%- if loop.first %}
+-                    {%- if content|trim %}
+-                        {{- '\n\n<tool_call>\n<function=' + tool_call.name + '>\n' }}
++                    {%- if content | trim %}
++                        {{- '\n\n<tool_call>\n<function=' + call.name + '>\n' }}
+                     {%- else %}
+-                        {{- '<tool_call>\n<function=' + tool_call.name + '>\n' }}
++                        {{- '<tool_call>\n<function=' + call.name + '>\n' }}
+                     {%- endif %}
+                 {%- else %}
+-                    {{- '\n<tool_call>\n<function=' + tool_call.name + '>\n' }}
++                    {{- '\n<tool_call>\n<function=' + call.name + '>\n' }}
+                 {%- endif %}
+-                {%- if tool_call.arguments is defined and tool_call.arguments is mapping %}
+-                    {%- for args_name in tool_call.arguments %}
+-                        {%- set args_value = tool_call.arguments[args_name] %}
++                {%- if call.arguments is defined and call.arguments is mapping %}
++                    {%- for args_name in call.arguments %}
++                        {%- set args_value = call.arguments[args_name] %}
+                         {{- '<parameter=' + args_name + '>\n' }}
+                         {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}
+                         {{- args_value }}
+                         {{- '\n</parameter>\n' }}
+                     {%- endfor %}
++                {%- elif call.arguments is defined and call.arguments is string and call.arguments %}
++                    {{- call.arguments }}
++                    {{- '\n' }}
+                 {%- endif %}
+                 {{- '</function>\n</tool_call>' }}
+             {%- endfor %}

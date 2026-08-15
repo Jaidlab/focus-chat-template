@@ -1,0 +1,66 @@
+--- a/chat.jinja
++++ b/chat.jinja
+@@ -42,6 +42,22 @@
+ {%- if not messages %}
+     {{- raise_exception('No messages provided.') }}
+ {%- endif %}
++{%- set leading = namespace(active=true, count=0, content='') %}
++{%- for message in messages %}
++    {%- if leading.active and (message.role == 'system' or message.role == 'developer') %}
++        {%- set rendered = render_content(message.content, false, true) | trim %}
++        {%- if rendered %}
++            {%- if leading.content %}
++                {%- set leading.content = leading.content + '\n' + rendered %}
++            {%- else %}
++                {%- set leading.content = rendered %}
++            {%- endif %}
++        {%- endif %}
++        {%- set leading.count = leading.count + 1 %}
++    {%- else %}
++        {%- set leading.active = false %}
++    {%- endif %}
++{%- endfor %}
+ {%- if tools and tools is iterable and tools is not mapping %}
+     {{- '<|im_start|>system\n' }}
+     {{- "# Tools\n\nYou have access to the following functions:\n\n<tools>" }}
+@@ -51,18 +67,12 @@
+     {%- endfor %}
+     {{- "\n</tools>" }}
+     {{- '\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>' }}
+-    {%- if messages[0].role == 'system' %}
+-        {%- set content = render_content(messages[0].content, false, true)|trim %}
+-        {%- if content %}
+-            {{- '\n\n' + content }}
+-        {%- endif %}
++    {%- if leading.content %}
++        {{- '\n\n' + leading.content }}
+     {%- endif %}
+     {{- '<|im_end|>\n' }}
+-{%- else %}
+-    {%- if messages[0].role == 'system' %}
+-        {%- set content = render_content(messages[0].content, false, true)|trim %}
+-        {{- '<|im_start|>system\n' + content + '<|im_end|>\n' }}
+-    {%- endif %}
++{%- elif leading.content %}
++    {{- '<|im_start|>system\n' + leading.content + '<|im_end|>\n' }}
+ {%- endif %}
+ {%- set ns = namespace(multi_step_tool=true, last_query_index=messages|length - 1) %}
+ {%- for message in messages[::-1] %}
+@@ -79,12 +89,11 @@
+     {{- raise_exception('No user query found in messages.') }}
+ {%- endif %}
+ {%- for message in messages %}
+-    {%- set content = render_content(message.content, true)|trim %}
+-    {%- if message.role == "system" %}
+-        {%- if not loop.first %}
+-            {{- raise_exception('System message must be at the beginning.') }}
+-        {%- endif %}
+-    {%- elif message.role == "user" %}
++    {%- set content = render_content(message.content, true) | trim %}
++    {%- if loop.index0 < leading.count %}
++    {%- elif message.role == 'system' or message.role == 'developer' %}
++        {{- raise_exception('System/developer message must be at the beginning.') }}
++    {%- elif message.role == 'user' %}
+         {{- '<|im_start|>' + message.role + '\n' + content + '<|im_end|>' + '\n' }}
+     {%- elif message.role == "assistant" %}
+         {%- set reasoning_content = '' %}

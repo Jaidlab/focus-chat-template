@@ -1,0 +1,13 @@
+--- a/chat.jinja
++++ b/chat.jinja
+@@ -148,7 +148,9 @@
+                 {{- '</function>\n</tool_call>' }}
+             {%- endfor %}
+         {%- endif %}
+-        {{- '<|im_end|>\n' }}
++        {%- if not (loop.last and continue_final_message is defined and continue_final_message) %}
++            {{- '<|im_end|>\n' }}
++        {%- endif %}
+     {%- elif message.role == 'tool' %}
+         {%- set previous_role = messages[loop.index0 - 1].role if loop.index0 > 0 else '' %}
+         {%- if previous_role != 'tool' %}

@@ -1,0 +1,26 @@
+- base: [Qwen/Qwen3.6-27B original](https://huggingface.co/Qwen/Qwen3.6-27B/blob/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/chat_template.jinja)
+  - commit `6a9e13bd6fc8f0983b9b99948120bc37f49c13e9`
+  - SHA-256 `E84F32A23FDDA27689F868AA4A1A5621F41133E51A48D7F3EFCBEA2839574259`
+- adopted tweaks from [Unsloth Qwen3.6](https://huggingface.co/unsloth/Qwen3.6-27B/blob/d6e694245c1d535508bc54062f5e258d7b1e04f5/chat_template.jinja)
+  - Added `developer` role as alias for `system`. ([lines 45–57](https://huggingface.co/unsloth/Qwen3.6-27B/blob/d6e694245c1d535508bc54062f5e258d7b1e04f5/chat_template.jinja#L45-L57))
+  - Merged leading system/developer messages into a single policy message. ([lines 45–57](https://huggingface.co/unsloth/Qwen3.6-27B/blob/d6e694245c1d535508bc54062f5e258d7b1e04f5/chat_template.jinja#L45-L57), [lines 67–75](https://huggingface.co/unsloth/Qwen3.6-27B/blob/d6e694245c1d535508bc54062f5e258d7b1e04f5/chat_template.jinja#L67-L75))
+  - Allowed histories without a normal human query. ([lines 76–86](https://huggingface.co/unsloth/Qwen3.6-27B/blob/d6e694245c1d535508bc54062f5e258d7b1e04f5/chat_template.jinja#L76-L86))
+  - Made mapping-argument rendering portable by avoiding `|items`. ([lines 122–130](https://huggingface.co/unsloth/Qwen3.6-27B/blob/d6e694245c1d535508bc54062f5e258d7b1e04f5/chat_template.jinja#L122-L130))
+- adopted tweaks from [Froggeric version](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja)
+  - Added `preserve_thinking` option to retain historical reasoning. ([line 8](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L8), [lines 225–230](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L225-L230))
+  - Retained mid-conversation system/developer messages as Qwen system turns. ([lines 165–182](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L165-L182))
+  - Allowed string-valued `message.thinking` as fallback for historical reasoning. ([lines 183–197](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L183-L197))
+  - Applied boundary-aware `</think>` parsing. ([lines 198–223](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L198-L223))
+  - Avoided synthesizing empty historical thinking blocks. ([lines 225–230](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L225-L230))
+  - Supported both wrapped and direct tool calls, but never null-wrapped. ([lines 231–237](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L231-L237))
+  - Preserved non-empty string tool arguments. ([lines 261–280](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L261-L280))
+  - Used direct message indexing for tool-response grouping instead of `loop.previtem`/`loop.nextitem`. ([line 165](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L165), [lines 286–318](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L286-L318))
+- custom tweaks
+  - Merged any number of leading system/developer messages, generalizing Unsloth's two-message merge. ([lines 45–57](https://huggingface.co/unsloth/Qwen3.6-27B/blob/d6e694245c1d535508bc54062f5e258d7b1e04f5/chat_template.jinja#L45-L57))
+  - Applied boundary-aware `</think>` parsing but excluded Froggeric's malformed-tag recovery. ([lines 198–223](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L198-L223))
+  - Raised an error containing the offending role instead of Qwen's generic unknown-role error. ([lines 143–144](https://huggingface.co/Qwen/Qwen3.6-27B/blob/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/chat_template.jinja#L143-L144))
+  - Used direct message indexing for tool-response grouping without Froggeric's error-escalation state. ([lines 286–318](https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates/blob/b225c1d63f84c65af7dd6af2ba384eb037aa885e/chat_template.jinja#L286-L318))
+  - Guarded undefined `tools`/`tool_calls` and handled non-mapping content items defensively.
+  - Adopted Qwen's proposed `continue_final_message` fix for partial assistant prefills. ([lines 130–132](https://huggingface.co/Qwen/Qwen3.6-27B/blob/0774bb84a25294dac0538c2bfc7abc08ae89d522/chat_template.jinja#L130-L132))
+- unimodality patch
+  - Removed Qwen's vision-token machinery and rendered image/video content as `[image]` and `[video]`. ([lines 1–41](https://huggingface.co/Qwen/Qwen3.6-27B/blob/6a9e13bd6fc8f0983b9b99948120bc37f49c13e9/chat_template.jinja#L1-L41))
